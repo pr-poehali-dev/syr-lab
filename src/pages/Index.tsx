@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import Snowfall from '@/components/Snowfall';
 
 const PRODUCTS_API = 'https://functions.poehali.dev/1eb652a5-856d-4f01-8e9a-61d5146799ed';
 const CONTENT_API = 'https://functions.poehali.dev/e1d76fb2-668a-41de-89e4-902b96e41dfb';
@@ -103,6 +104,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Snowfall />
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
