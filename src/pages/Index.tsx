@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+
+const PRODUCTS_API = 'https://functions.poehali.dev/1eb652a5-856d-4f01-8e9a-61d5146799ed';
+const CONTENT_API = 'https://functions.poehali.dev/e1d76fb2-668a-41de-89e4-902b96e41dfb';
 
 interface Product {
   id: number;
@@ -25,68 +28,44 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-const products: Product[] = [
-  {
-    id: 1,
-    name: 'Камамбер',
-    description: 'Мягкий сыр с нежной плесневой корочкой',
-    price: 890,
-    weight: '200г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/7f6e72ed-ae7e-482f-b041-f7c06c6954f4.jpg',
-    category: 'soft'
-  },
-  {
-    id: 2,
-    name: 'Пармезан выдержанный',
-    description: 'Твёрдый сыр 24 месяца выдержки',
-    price: 1290,
-    weight: '250г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/f8435276-2ccb-4f41-a4fc-10d5e5788bad.jpg',
-    category: 'hard'
-  },
-  {
-    id: 3,
-    name: 'Моцарелла буффало',
-    description: 'Свежий сыр из молока буйволиц',
-    price: 750,
-    weight: '150г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/a2bc09bb-62ec-46b0-bc5f-0fbd4d3e9542.jpg',
-    category: 'soft'
-  },
-  {
-    id: 4,
-    name: 'Рокфор',
-    description: 'Сыр с благородной голубой плесенью',
-    price: 990,
-    weight: '180г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/7f6e72ed-ae7e-482f-b041-f7c06c6954f4.jpg',
-    category: 'blue'
-  },
-  {
-    id: 5,
-    name: 'Гауда',
-    description: 'Полутвёрдый сыр с ореховым вкусом',
-    price: 690,
-    weight: '200г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/f8435276-2ccb-4f41-a4fc-10d5e5788bad.jpg',
-    category: 'semi-hard'
-  },
-  {
-    id: 6,
-    name: 'Бри',
-    description: 'Французский сыр с мягкой текстурой',
-    price: 850,
-    weight: '200г',
-    image: 'https://cdn.poehali.dev/projects/40e54eb3-e9e5-456d-b5ae-d343fa5b8727/files/a2bc09bb-62ec-46b0-bc5f-0fbd4d3e9542.jpg',
-    category: 'soft'
-  }
-];
-
 export default function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [heroContent, setHeroContent] = useState({ title: '', subtitle: '' });
+  const [aboutContent, setAboutContent] = useState({ content: '' });
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadProducts();
+    loadContent();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(PRODUCTS_API);
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    }
+  };
+
+  const loadContent = async () => {
+    try {
+      const response = await fetch(CONTENT_API);
+      const data = await response.json();
+      
+      const hero = data.find((c: any) => c.section === 'hero');
+      const about = data.find((c: any) => c.section === 'about');
+      
+      if (hero) setHeroContent({ title: hero.title, subtitle: hero.subtitle });
+      if (about) setAboutContent({ content: about.content });
+    } catch (error) {
+      console.error('Failed to load content:', error);
+    }
+  };
 
   const addToCart = (product: Product) => {
     const existing = cart.find(item => item.id === product.id);
@@ -360,10 +339,10 @@ export default function Index() {
         
         <div className="container relative z-10 text-center text-secondary-foreground animate-fade-in">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Сыроварня SOBKO
+            {heroContent.title || 'Сыроварня SOBKO'}
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
-            Премиальные сыры ручной работы от мастеров своего дела
+            {heroContent.subtitle || 'Премиальные сыры ручной работы от мастеров своего дела'}
           </p>
           <Button size="lg" className="text-lg px-8">
             <a href="#catalog">Смотреть каталог</a>
@@ -422,17 +401,9 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <h2 className="text-4xl font-bold mb-6">О нас</h2>
-              <p className="text-lg mb-4">
-                Сыроварня SOBKO — это семейное предприятие, где традиции сыроделия 
-                передаются из поколения в поколение.
-              </p>
-              <p className="text-lg mb-4">
-                Мы используем только натуральное молоко от проверенных фермеров 
-                и создаём сыры по классическим рецептам с соблюдением всех технологий.
-              </p>
-              <p className="text-lg">
-                Каждый наш сыр — это результат кропотливого труда и любви к своему делу.
-              </p>
+              <div className="text-lg whitespace-pre-wrap">
+                {aboutContent.content || 'Сыроварня SOBKO — это семейное предприятие, где традиции сыроделия передаются из поколения в поколение. Мы используем только натуральное молоко от проверенных фермеров и создаём сыры по классическим рецептам с соблюдением всех технологий. Каждый наш сыр — это результат кропотливого труда и любви к своему делу.'}
+              </div>
             </div>
             <div className="relative h-[400px] rounded-lg overflow-hidden animate-scale-in">
               <img 
